@@ -1,0 +1,186 @@
+<html><head>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+</head>
+<body>
+  <h3>Yuki Wu, zw499</h3>
+  <div id="p1">
+    <h3>Problem 1:</h3>
+      <ul>
+        <li>
+          A:
+          This is a divergent scale because the yellow and red on two sides are stiched together at the midpoint blue color.
+          It is not an effective color scale as all three colors are more of bright colors making it hard to discern the progression from both sides to the midpoint.
+        </li>
+
+        <li>
+          B:
+          Ths is not an effective color scale for this task.
+          This is because it would be better to present the numeric data ranging from -1 to 1 sequentially from two sides to the middle of the scale.
+          But, a sequential color scale can only present data from one side to the other.
+        </li>
+
+        <li>
+          C:
+          The following kinds of anomalous trichromatic and dichromatic color vision deficiencies would cause a loss of perceivable hue variation:
+          <br>
+          Anomalous trichromatic:Blue-Weak/Deuteranomaly
+          <br>Dichromatic: Blue-Blind/Tritanopia
+        </li>
+
+        <li>
+          D:
+          I would not recommend using this rainbow scale to display their data.
+          Rainbow scale is effective only if it is used to show differences but not at all if it is used to represent ordered numeric data.
+          Each color of the rainbow scale might have various implications to different people.
+          For instance, it is hard to explain why a purple or an orange color may represent higher average life expectancy than the other.
+        </li>
+
+      </ul>
+  </div>
+
+  <div id="p2">
+    <h3>Problem 2:</h3>
+      <p>
+        <svg id="pp2" height=240 width=240></svg>
+        <script>
+          let svg=d3.select("svg#pp2")
+                    .style("border-width","1px")
+                    .style("border-style","solid")
+                    .style("border-color","lightgrey");
+
+          let height = svg.attr("height");
+          let width = svg.attr("width");
+
+          const line=[{"axis":0.0},
+                      {"axis":1.0},
+                      {"axis":2.0},
+                      {"axis":3.0},
+                      {"axis":4.0},
+                      {"axis":5.0},
+                      {"axis":6.0},
+                      {"axis":7.0},
+                      {"axis":8.0},
+                      {"axis":9.0},
+                      {"axis":10.0}];
+
+          const data=[{"x":1.0 ,"y":1.0},
+                      {"x":2.0 ,"y":2.0},
+                      {"x":3.0 ,"y":3.5},
+                      {"x":4.0 ,"y":4.5},
+                      {"x":5.0 ,"y":5.0},
+                      {"x":6.0 ,"y":5.5},
+                      {"x":7.0 ,"y":6.0},
+                      {"x":8.0 ,"y":7.5},
+                      {"x":9.0 ,"y":9.0}];
+
+          const textLabel=[{"xl":0 ,"yl":0},
+                           {"xl":5 ,"yl":5},
+                           {"xl":10 ,"yl":10}];
+
+          let xpointPos = d3.scaleLinear()
+                            .domain([0,10])
+                            .range([20,220]);
+
+          let ypointPos = d3.scaleLinear()
+                            .domain([0,10])
+                            .range([20,220]);
+
+          line.forEach((d,i) => {
+            svg.append("line")
+               .attr("x1",xpointPos(d['axis']))
+               .attr("x2",xpointPos(d['axis']))
+               .attr("y1",ypointPos(0))
+               .attr("y2",ypointPos(10))
+               .style("stroke","grey")
+               .style("stroke-width",1);
+
+            svg.append("line")
+               .attr("x1",xpointPos(0))
+               .attr("x2",xpointPos(10))
+               .attr("y1",ypointPos(d['axis']))
+               .attr("y2",ypointPos(d['axis']))
+               .style("stroke","grey")
+               .style("stroke-width",1);
+          });
+
+          data.forEach((d,i) => {
+
+            svg.append("circle")
+               .attr("r",4)
+               .attr("cx",xpointPos(d['x']))
+               .attr("cy",height - ypointPos(d['y']))
+               .style("fill","darkblue");
+
+          });
+
+          textLabel.forEach((d,i) => {
+            svg.append("text")
+               .text(d['xl'])
+               .style("font-size","17px")
+               .style("text-anchor","middle")
+               .style("dominant-baseline","hanging")
+               .style("font-family","Arial")
+               .attr("x",xpointPos(d['xl']))
+               .attr("y",height - ypointPos(0) + 5);
+
+            svg.append("text")
+               .text(d['yl'])
+               .style("font-size","17px")
+               .style("text-anchor","end")
+               .style("dominant-baseline","middle")
+               .style("font-family","Arial")
+               .attr("x",ypointPos(0) - 5)
+               .attr("y",height - ypointPos(d['yl']));
+          });
+
+        </script>
+      </p>
+  </div>
+
+  <div id="p3">
+    <h3>Problem 3:</h3>
+      <p>
+        <svg id="pp3" height=500 width=500></svg>
+        <script>
+          let svg3=d3.select("svg#pp3")
+                     .style("background-color","black");
+
+          d3.csv("NCAA_shots.csv").then(data => {
+            console.log(data);
+
+
+          data.forEach((d,i) => {
+            d['x'] = Number(d['x']) * 5;
+            d['y'] = Number(d['y']) * 5;
+            d['width'] = Number(d['width']) * 5;
+            d['height'] = Number(d['height']) * 5;
+          });
+
+          const heatmap = d3.extent(data, d => d['log_attempt']);
+          let heatmapScale = d3.scaleSequential(heatmap, d3.interpolateInferno);
+
+          data.forEach((d,i) => {
+            svg3.append("rect")
+               .attr("x",d['x'])
+               .attr("y",d['y'])
+               .attr("width",d['width'])
+               .attr("height",d['height'])
+               .attr("fill",heatmapScale(d['log_attempt']))
+          });
+
+          });
+
+        </script>
+      </p>
+  </div>
+
+  <div id="p3B">
+    <h3>Problem 3B:</h3>
+      <p>
+        Comparing the new result with the previous visualization, it is possible to tell that a linear color scale would show less detailed hue distinction than a logarithmic scale does on the same scale size.
+        However, the logarithmic color scale is less precise than the linear one on each color filled.
+      </p>
+  </div>
+
+</body>
+</html>
