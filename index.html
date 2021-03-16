@@ -1,0 +1,209 @@
+<html><head>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+
+  <style>
+  .gridlines line {
+    stroke: #bbb;
+  }
+
+  .gridlines .domain {
+    stroke: none;
+  }
+
+  .legend span {
+    margin-right: 40px;
+  }
+  </style>
+
+</head>
+<body>
+  <h3>Yuki Wu, zw499</h3>
+  <div id="p1">
+    <h3>Problem 1:</h3>
+
+    <p>
+      A:<br>
+      I found that some values of 'price' contain $ and a comma which do not allow Number() to convert types directly. I used replace(/,|\$/g, "") to remove them.
+      Some data are empty or not available and some 'points' or 'price' have negative values.
+      I used filter to check for those bad data values and remove when found.
+      <br>The total count of the number of bad data items removed is 61, resulting in a final data array length of 845.
+    </p>
+
+    <p>
+      B:<br>
+      I used scaleLog for the x-axis representing the price and scaleLinear for the y-axis representing the points.
+      This is because the points overall are well distributed veritically with a linear scale.
+      <br>But with a linear scale, the values of the price smaller than $40 would be displayed pretty crowded and unclear.
+      So, I used a log scale to space out better.
+      <br>Also, I added a dollar symbol to each value on the x-axis so that users can tell that the horizontal axis represents the price.
+    </p>
+
+    <p>
+      C:<br>
+      I applied a radius of 4 for the circle elements to avoid having too much overlapping for values that are close to each other while not being too small to see.
+      I also an opacity of 0.6 for the circle elements to make it more obvious to tell which values are overlapping and which are not.
+      <br>An advantage of using the jitter function to manage overlap is that it can separate small areas of overlapping values a bit out.
+      It is easier to see how many circles there are at the same or about the same point.
+      <br>A disadvantage of the jitter function is that it creates a random error to each value making the displayed graph less true compared to the real data.
+    </p>
+
+    <p>
+      D:<br>
+      This approach allows the users to pick out a specific circle element and see the title of it.
+      When a user points at the circle one wants to check, the circle will be brought to the top, grow larger in size, and have a black stroke added to it.
+      This makes the users eaiser to see if the selected element is what they want.
+      <br>However, it is ineffective in showing the exact price and points of a selected point.
+      Also, an issue I found and fixed was that when the vertically highest point is close to the label and the mouse is pointing somewhere between the two, the label started to blink.
+      I fixed this issue by lowering the scatter plot away from the label.
+    </p>
+
+    <p>
+      E:<br>
+      This approach allows users to see the wine information of each state separately.
+      <br>I increased the opacity of the circle elements of selected state by 0.4 and decreased the unselected by 0.4.
+      I set a margin-right of 40px to space out the legend clearly.
+
+      <svg id="B" width=800 height=500>
+        <text id="label" x="790" y="10" text-anchor="end" alignment-baseline="hanging"></text>
+      </svg>
+      <div id="legend" class="legend"></div>
+      <script>
+        //A
+        d3.json("wines.json", d3.autoType).then(data => {
+        console.log(data);
+
+        data.forEach((d,i) => {
+          d['points'] = Number(d['points'])
+          d['price'] = Number(d['price'].replace(/,|\$/g, ""))
+        });
+
+        const l = data.length;
+        data = data.filter((d) => {return d['points'] >= 0 && d['price'] >= 0});
+        data = data.filter((d) => {return d['region_1'] != "" && d['region_1'] != "N/A" && d['region_1'] != "NA" && d['region_1'] != "NaN"});
+        data = data.filter((d) => {return d['country'] != "" && d['country'] != "N/A" && d['country'] != "NA" && d['country'] != "NaN"});
+        data = data.filter((d) => {return d['state'] != "" && d['state'] != "N/A" && d['state'] != "NA" && d['state'] != "NaN"});
+        data = data.filter((d) => {return d['title'] != "" && d['title'] != "N/A" && d['title'] != "NA" && d['title'] != "NaN"});
+        data = data.filter((d) => {return d['variety'] != "" && d['variety'] != "N/A" && d['variety'] != "NA" && d['variety'] != "NaN"});
+        data = data.filter((d) => {return d['winery'] != "" && d['winery'] != "N/A" && d['winery'] != "NA" && d['winery'] != "NaN"});
+        console.log("length of the data array after filtering is", data.length);
+        console.log("total count of the number of bad data items removed is", l - data.length);
+
+        console.log(data);
+
+        //B
+        let svg=d3.select("svg#B");
+
+        const height = svg.attr("height");
+        const width = svg.attr("width");
+        const margins = {"top":40, "right":10, "bottom":60, "left":45};
+        const chartWidth = width - margins.left - margins.right;
+        const chartHeight = height - margins.top - margins.bottom;
+
+        let scatter = svg.append("g").attr("transform","translate("+ margins.left +","+ margins.top +")");
+
+        const priceExtent = d3.extent(data, d => d['price']);
+        const pointsExtent = d3.extent(data, d => d['points']);
+
+        const priceScale = d3.scaleLog().domain(priceExtent).range([0, chartWidth]);
+        const pointsScale = d3.scaleLinear().domain(pointsExtent).range([chartHeight, 0]);
+        let stateScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+        let yAxis = d3.axisLeft(pointsScale);
+        svg.append("g")
+           .attr("class","y axis")
+           .attr("transform","translate("+ (margins.left-20) +","+ margins.top +")")
+           .call(yAxis);
+
+        let xAxis = d3.axisBottom(priceScale).tickFormat(d3.format("$~g"));
+        svg.append("g")
+           .attr("class","x axis")
+           .attr("transform","translate("+ (margins.left) +","+ (margins.top+chartHeight+20) +")")
+           .call(xAxis);
+
+        yGrid = d3.axisLeft(pointsScale).tickFormat("").tickSize(-chartWidth-2);
+        svg.append("g").lower()
+           .attr("class","y gridlines")
+           .attr("transform","translate("+ (margins.left-20) +","+ margins.top +")")
+           .call(yGrid);
+
+        xGrid = d3.axisBottom(priceScale).tickFormat("").tickSize(-chartHeight-20);
+        svg.append("g").lower()
+           .attr("class","x gridlines")
+           .attr("transform","translate("+ (margins.left) +","+ (margins.top+chartHeight+20) +")")
+           .call(xGrid);
+
+        //C
+        let jitter = () => d3.randomUniform(-4,4)();
+
+        data.forEach((d,i) => {
+          let circle = scatter.append("circle")
+                              .attr("cx",priceScale(d['price'])+jitter())
+                              .attr("cy",pointsScale(d['points'])+jitter())
+                              .attr("fill",stateScale(d['state']))
+                              .attr("r",4)
+                              .attr("opacity",0.6)
+                              .attr("index",i)
+                              .attr("label",d['title'])
+                              .attr("state",d['state']);
+
+          //D
+          circle.on("mouseover", function(){
+            d3.select(this).raise()
+                           .transition().duration(200)
+                           .attr("stroke","black")
+                           .attr("stroke-width",3)
+                           .attr("r",5+4);
+            d3.select("#label").raise()
+                               .text(d['title']);
+          })
+
+          circle.on("mouseout", function() {
+            d3.select(this).transition().duration(200)
+                           .attr("stroke-width",0)
+                           .attr("r",5);
+            d3.select("#label").text("");
+          })
+        });
+
+
+        //E
+        stateScale.domain().forEach((d,i) => {
+          d3.select("#legend")
+            .append("span")
+            .text(d)
+            .style("color",stateScale(d))
+            .on("mouseover", function() {
+              d3.selectAll("#B circle").each(function(){
+                let c = d3.select(this);
+                let state = c.attr("state");
+                if (state == d) {
+                  c.attr("opacity",0.6+0.4);
+                }
+                else {
+                  c.attr("opacity",0.6-0.4);
+                }
+              });
+            });
+
+        });
+
+        d3.select("#legend")
+          .append("span")
+          .text("Clear")
+          .style("color","black")
+          .on("mouseover", function() {
+            d3.selectAll("#B circle").each(function(){
+              let c = d3.select(this);
+              c.attr("opacity",0.6);
+            });
+          });
+
+
+        });
+      </script>
+    </p>
+
+  </div>
+
+</body>
+</html>
